@@ -12,9 +12,6 @@ load_dotenv()
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-
-
-
 # Base directory for attachments
 ATTACHMENTS_DIR = "./attachments"
 
@@ -33,8 +30,7 @@ def process_text_with_openai(email_text):
         Email Body:
         {email_text}
         """
-        print("Prompt sent to OpenAI (Text Processing):")
-        print(prompt)
+        print("Prompt sent to OpenAI (Text Processing):", prompt)
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -61,8 +57,6 @@ def process_text_with_openai(email_text):
         return {"username": None, "utr": None}
 
 # Function to extract text from images using Tesseract OCR
-
-# Function to extract text from images using Tesseract OCR
 def extract_text_from_image(image_path):
     """Extract text from a transaction image using Tesseract OCR and replace misread symbols."""
     try:
@@ -71,15 +65,14 @@ def extract_text_from_image(image_path):
         extracted_text = pytesseract.image_to_string(image)
         print("Raw Extracted Text from Image:", extracted_text)
 
-        # Replace common misread symbols
-        corrected_text = extracted_text.replace("£", "₹")  # Replace pound symbol with rupee
-        print("Corrected Text with INR:", corrected_text)
-        
+        # Replace common misread symbols and remove INR or pound symbol
+        corrected_text = extracted_text.replace("\u20b9", "").replace("\u00a3", "")
+        print("Corrected Text:", corrected_text)
+
         return corrected_text
     except Exception as e:
         print(f"Error extracting text from image: {e}")
         return None
-
 
 # Function to process transaction image using OpenAI
 def process_image_with_openai(image_path):
@@ -98,8 +91,7 @@ def process_image_with_openai(image_path):
         Extracted Text:
         {extracted_text}
         """
-        print("Prompt sent to OpenAI (Image Processing):")
-        print(prompt)
+        print("Prompt sent to OpenAI (Image Processing):", prompt)
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -153,11 +145,11 @@ def process_folder(folder_path):
             email_text_data = process_text_with_openai(email_text)
 
         # Process transaction image
-        transaction_image = None
-        for file_name in os.listdir(folder_path):
-            if file_name.lower().endswith((".png", ".jpg", ".jpeg")):
-                transaction_image = os.path.join(folder_path, file_name)
-                break
+        transaction_image = next(
+            (os.path.join(folder_path, file_name) for file_name in os.listdir(folder_path)
+             if file_name.lower().endswith((".png", ".jpg", ".jpeg"))),
+            None
+        )
 
         transaction_image_data = {"transaction_id": None, "transaction_amount": None}
         if transaction_image:
@@ -176,9 +168,7 @@ def process_folder(folder_path):
         print(f"Error processing folder {folder_path}: {e}")
         return None
 
-
-
-# Run the Flask app
+# Main script to run the agent
 if __name__ == "__main__":
     print("Starting Agent with Tesseract OCR and OpenAI...")
     try:

@@ -115,15 +115,6 @@ class EmailPreprocessingAgent:
                 "email_text": email_text,
                 "unique_id": unique_folder_name  # Send unique ID for tracking
             }
-
-            print("Sending data to AI Processing Agent...")
-            response = requests.post(self.ai_agent_url, data=data, files=files)
-            print(f"Response: {response.text}")
-
-            if response.status_code == 200:
-                print("Successfully sent data to AI Processing Agent.")
-            else:
-                print(f"Failed to send data. Status code: {response.status_code}")
         except Exception as e:
             print(f"Error sending data to AI agent: {e}")
 
